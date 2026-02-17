@@ -20,8 +20,9 @@ class Chore(models.Model):
 
 
 class Day(models.Model):
-    date = models.DateField()
-    chores = models.ManyToManyField(Chore, blank=True, default=None)
+    date = models.DateField(unique=True)
+    busy = models.BooleanField(default=False)
+    chores = models.ManyToManyField(Chore,through="ChoreAssignment", related_name="days")
 
     class Meta:
         ordering = ["date"]
@@ -29,3 +30,16 @@ class Day(models.Model):
     def __str__(self):
         return str(self.date)
 
+# through model
+class ChoreAssignment(models.Model):
+    chore = models.ForeignKey(Chore, on_delete=models.CASCADE)
+    day = models.ForeignKey(Day, on_delete=models.CASCADE)
+
+    class Meta:
+        # unique_together = ("chore", "day")  # same chore cannot be assigned to the same day twice, but chore can appear on other days
+        constraints = [
+            models.UniqueConstraint(
+                fields=["chore", "day"],
+                name="unique_chore_in_day"
+            )
+        ]
